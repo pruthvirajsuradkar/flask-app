@@ -6,7 +6,7 @@ pipeline {
             steps {
               echo "clean workspace.."
               cleanWs()
-              // git branch: 'main', url: 'https://github.com/pruthvirajsuradkar/flask-app.git'
+               git branch: 'main', url: 'https://github.com/pruthvirajsuradkar/flask-app.git'
             }
         }
         stage('docker clean-up') {
