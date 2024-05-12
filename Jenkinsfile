@@ -1,26 +1,33 @@
-#!/usr/bin/env groovy
 pipeline {
-    agent {
-        node any
-    }
-
-    stages {
-        stage('Build Image') {
-            when {
-                branch 'master'  //only run these steps on the master branch
+    agent any
+    
+    stages {  
+        stage('git clone') {
+            steps {
+              echo "clean workspace.."
+              cleanWs()
+              git branch: 'main', url: 'https://github.com/pruthvirajsuradkar/flask-app.git'
             }
-
-            // Jenkins Stage to Build the Docker Image
-
         }
-
-        stage('Publish Image') {
-            when {
-                branch 'master'  //only run these steps on the master branch
+        stage('docker clean-up') {
+            steps {
+               sh 'images=$(docker images -f dangling=true -q); if [[ ${images} ]]; then docker rmi --force ${images}; fi'
+               sh '''if [ "$(docker ps -a -q -f name=flask-app)" ]; then
+                    docker stop flask-app
+                    docker rm flask-app
+                fi'''
+               sh 'docker builder prune -af'
             }
-            
-            // Jenkins Stage to Publish the Docker Image to Dockerhub or any Docker repository of your choice.
-
         }
-    }
+        stage('docker build') {
+            steps {
+            sh  'docker build . -t flask-app-image'
+            }
+        }
+        stage('docker run') {
+            steps {       
+                sh 'docker run -d --name flask-app -p 5000:5000 flask-app-image'
+            }
+        }    
+    }      
 }
